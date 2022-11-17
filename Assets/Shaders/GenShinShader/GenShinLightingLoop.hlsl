@@ -70,15 +70,16 @@ half3 Specular(ToonSurfaceData toon_surface_data, ToonLightingData toon_lighting
 {
     half3 halfDirWS = normalize(normalize(light.direction) + toon_lighting_data.viewDirWS);
     half3 reflectDir = reflect(- toon_lighting_data.viewDirWS, toon_lighting_data.normalWS);
-    half NdotH =saturate(dot(toon_lighting_data.normalWS , halfDirWS)) * _MatCapScale;
+    half NdotH =saturate(dot(toon_lighting_data.normalVS.xz,TransformWorldToView(halfDirWS).xz)) * _MatCapScale;
     half LdotR =saturate(dot(light.direction, reflectDir)) * _MatCapScale;
-    half VdotN =saturate(dot(toon_lighting_data.viewDirWS,toon_lighting_data.normalWS));
+    half VdotN = dot(toon_lighting_data.normalVS.xz, toon_lighting_data.viewDirVS.xz);
+    half VWdotVV = dot(toon_lighting_data.normalVS.y, toon_lighting_data.viewDirVS.y);
     half VdotR = saturate(dot(reflectDir, toon_lighting_data.viewDirWS));
     half NdotR = dot(toon_lighting_data.normalWS, reflectDir);
     half VdotH = saturate(dot(toon_lighting_data.viewDirWS, halfDirWS));
     half3 ViewDirVS = TransformWorldToView(toon_lighting_data.viewDirWS);
     half VdotNVS = saturate(dot(ViewDirVS, toon_lighting_data.normalVS));
-    half3 matcap = SAMPLE_TEXTURE2D(_MatCap, sampler_MatCap,float2(VdotR * 0.5,VdotN * 0.5)).rgb;
+    half3 matcap = SAMPLE_TEXTURE2D(_MatCap, sampler_MatCap,float2(VdotN * 0.5, VdotN * 0.5)).rgb;
     half3 matcap2 = SAMPLE_TEXTURE2D(_MatCap, sampler_MatCap,float2(VdotN * 0.5, LdotR * 0.5)).rgb;
     half3 specularRampColor = SAMPLE_TEXTURE2D(_SpecRamp, sampler_SpecRamp, float2(VdotN, toon_surface_data.specularlayer)).rgb;
     //matcap = pow(matcap, 1/0.45);
@@ -86,9 +87,10 @@ half3 Specular(ToonSurfaceData toon_surface_data, ToonLightingData toon_lighting
     half3 output =  matcap * toon_surface_data.albedo * _MetalMapIntensity * light.color * light.distanceAttenuation + matcap2  * toon_surface_data.albedo * _SecondMetalIntensity * light.color * light.distanceAttenuation;
     half specularBRDF = SpecularBRDF(NdotH, VdotN, saturate(dot(toon_lighting_data.normalWS, light.direction)), toon_surface_data.specularintensitymask);
     //return lerp(output, toon_surface_data.albedo, 0.5);
-    //return matcap;
+    //return VdotN;
 
-    return output;
+    return pow(VdotN, 6) * toon_surface_data.specularintensitymask * toon_surface_data.specularlayer *toon_surface_data.albedo * matcap;
+    //return NdotH * toon_surface_data.specularintensitymask * toon_surface_data.specularlayer;
     //return MatCapCross;
 }
 
@@ -109,11 +111,11 @@ half3 ShadingAllLights(ToonSurfaceData toon_surface_data, ToonLightingData toon_
 
     half3 emissionResult = Emission(toon_surface_data);
 
-    return (indirectResult * rampResult) + lerp(rampResult, specularResult * rampResult, toon_surface_data.specularintensitymask) + emissionResult;
+    //return (indirectResult * rampResult) + lerp(rampResult, specularResult * rampResult, toon_surface_data.specularintensitymask) + emissionResult;
     //return indirectResult + rampResult + specularResult + emissionResult;
     //return (indirectResult * rampResult) + rampResult + lerp(rampResult,  (specularResult * rampResult) , specularResult)+ emissionResult;
     //return toon_surface_data.specularintensitymask;
-    //return specularResult;
+    return specularResult;
     //return DecodeRampLayer(toon_surface_data.ramplayer);
     //return specularResult * toon_surface_data.specularintensitymask;
 }

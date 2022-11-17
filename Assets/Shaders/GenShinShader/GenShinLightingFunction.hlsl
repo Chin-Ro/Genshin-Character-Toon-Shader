@@ -17,6 +17,7 @@ struct ToonLightingData
     half3 viewDirWS;
     float4 shadowCoord;
     half3 normalVS;
+    half3 viewDirVS;
 };
 
 ToonSurfaceData InitSurfaceData(Varyings input)
@@ -41,13 +42,14 @@ ToonLightingData InitLightingData(Varyings input)
 {
     ToonLightingData output;
     output.positionWS = input.positionWSAndFogFactor.xyz;
-    output.viewDirWS = normalize(GetCameraPositionWS().xyz - output.positionWS);
+    output.viewDirWS = SafeNormalize(GetCameraPositionWS().xyz - output.positionWS);
+    output.viewDirVS = mul(UNITY_MATRIX_V, output.viewDirWS);
     float3x3 TBN = float3x3(input.tangentWS, input.bitangentWS, input.normalWS);
     half4 normalData = SAMPLE_TEXTURE2D(_NormalMap, sampler_NormalMap, input.uv);
     //float3 normalTS = UnpackNormal(normalData) + normalData.b;
     float3 normalTS = UnpackNormal(normalData);
     output.normalWS = normalize(mul(normalTS, TBN));
-    output.normalVS = TransformWorldToView(output.normalWS);
+    output.normalVS = mul(UNITY_MATRIX_V, output.normalWS);
 
     return output;
 }
