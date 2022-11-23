@@ -74,8 +74,8 @@ half3 Specular(ToonSurfaceData toon_surface_data, ToonLightingData toon_lighting
     half3 reflectDir = normalize(reflect(- toon_lighting_data.viewDirWS, toon_lighting_data.normalWS));
     half3 reflectDirVS = mul(UNITY_MATRIX_V, reflectDir);
     half3 rTS = mul(toon_lighting_data.TBN, reflectDir);
-    half VdotNTS = dot(normalize(toon_lighting_data.normalTS.xz), normalize(toon_lighting_data.viewTS.xz)) * 0.5;
-    half VdotNVS = dot(normalize(toon_lighting_data.normalVS.xz), normalize(toon_lighting_data.viewDirVS.xz)) * 0.5;
+    half VdotNTS = dot(normalize(toon_lighting_data.normalTS.xz), normalize(toon_lighting_data.viewTS.xz));
+    half VdotNVS = dot(normalize(toon_lighting_data.normalVS.xz), normalize(toon_lighting_data.viewDirVS.xz));
     half VdotRTS = dot(normalize(toon_lighting_data.normalTS.xz), normalize(rTS.xz)) * 0.5;
     half VdotRVS = dot(normalize(toon_lighting_data.normalVS.xz), normalize(reflectDirVS.xz)) * 0.5;
     half VdotNTS2 = saturate(dot(normalize(toon_lighting_data.normalTS.y), normalize(toon_lighting_data.viewTS.y)));
